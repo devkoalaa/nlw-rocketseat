@@ -73,7 +73,7 @@ export default function Memories() {
             return (
               <View key={memory.id} className="space-y-4">
                 <View className="flex-row items-center gap-2">
-                  <View className="h-px w-5  bg-gray-50" />
+                  <View className="-ml-8 h-px  w-5 bg-gray-50" />
                   <Text className="font-body text-xs text-gray-100">
                     {dayjs(memory.createdAt).format('D[ de ]MMMM[, ]YYYY')}
                   </Text>
