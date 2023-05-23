@@ -2,10 +2,12 @@
 
 import { ChangeEvent, useState } from 'react'
 
-export function MediaPicker() {
-  const [preview, setPreview] = useState<string | null>(null)
+export function MediaPicker({ coverUrl }: { coverUrl: string }) {
+  const [preview, setPreview] = useState<string>(coverUrl)
+  const [verificador, setVerificador] = useState('false')
 
   function onFileSelected(event: ChangeEvent<HTMLInputElement>) {
+    setVerificador('true')
     const { files } = event.target
 
     if (!files) {
@@ -27,6 +29,7 @@ export function MediaPicker() {
         accept="image/*"
         className="invisible h-0 w-0"
       />
+      <input type="hidden" name="verificador" value={verificador} />
 
       {preview && (
         // eslint-disable-next-line

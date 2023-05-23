@@ -2,49 +2,74 @@
 
 import { Camera } from 'lucide-react'
 import { MediaPicker } from './MediaPicker'
-import { FormEvent } from 'react'
+import { FormEvent, useState } from 'react'
 import { api } from '@/lib/api'
 import Cookie from 'js-cookie'
 import { useRouter } from 'next/navigation'
 
-export function NewMemoryForm() {
+export function MemoryForm({
+  id,
+  coverUrl,
+  contentProp,
+  isPublicProp = false,
+}: {
+  id: string
+  coverUrl: string
+  contentProp?: string
+  isPublicProp: boolean
+}) {
   const router = useRouter()
+  const [content, setContent] = useState(contentProp)
+  const [isPublic, setIsPublic] = useState<boolean>(isPublicProp)
 
   async function handleCreateMemory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     const formData = new FormData(event.currentTarget)
+    const fileToUpload = formData.get('coverUrl')
+    const verificador = formData.get('verificador')
     // console.log(Array.from(formData.entries()))
 
-    const fileToUpload = formData.get('coverUrl')
-
-    let coverUrl = ''
-
-    if (fileToUpload) {
+    if (verificador === 'true' && fileToUpload) {
       const uploadFormData = new FormData()
-
       uploadFormData.set('file', fileToUpload)
-
       const uploadResponse = await api.post('/upload', uploadFormData)
-
       coverUrl = uploadResponse.data.fileUrl
     }
 
     const token = Cookie.get('token')
 
-    await api.post(
-      '/memories',
-      {
-        coverUrl,
-        content: formData.get('content'),
-        isPublic: formData.get('isPublic'),
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
+    if (id) {
+      // editando
+      await api.put(
+        `/memories/${id}`,
+        {
+          coverUrl,
+          content,
+          isPublic,
         },
-      },
-    )
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+    } else {
+      // criando
+      await api.post(
+        '/memories',
+        {
+          coverUrl,
+          content,
+          isPublic,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+    }
 
     router.push('/')
   }
@@ -67,16 +92,19 @@ export function NewMemoryForm() {
             type="checkbox"
             name="isPublic"
             id="isPublic"
-            value="true"
+            checked={isPublic}
+            onChange={() => setIsPublic(!isPublic)}
             className="h-4 w-4 rounded border-gray-400 bg-gray-700 text-purple-500 focus:ring-0"
           />
           Tornar memória pública
         </label>
       </div>
 
-      <MediaPicker />
+      <MediaPicker coverUrl={coverUrl} />
 
       <textarea
+        onChange={(e) => setContent(e.target.value)}
+        value={content}
         name="content"
         spellCheck={false}
         className="w-full flex-1 resize-none rounded border-0 bg-transparent p-0 text-lg leading-relaxed text-gray-100 placeholder:pl-1 placeholder:text-gray-400 focus:ring-0"
